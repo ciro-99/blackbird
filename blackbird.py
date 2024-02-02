@@ -54,7 +54,7 @@ async def findUsername(username, interfaceType, flag_csv=False):
         }
         for x in results:
             userJson["sites"].append(x)
-        pathSave = os.path.join(path, "results", username + ".json")
+        pathSave = os.path.join(path, "output", "blackbird-" + username + ".json")
         userFile = open(pathSave, "w")
         json.dump(userJson, userFile, indent=4, sort_keys=True)
 
