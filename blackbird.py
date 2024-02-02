@@ -24,7 +24,7 @@ useragents = open("useragents.txt").read().splitlines()
 proxy = None
 
 
-async def findUsername(username, interfaceType, flag_csv=False):
+async def findUsername(username, interfaceType, flag_csv=False, output_file=None):
     start_time = time.time()
     timeout = aiohttp.ClientTimeout(total=20)
 
@@ -54,14 +54,21 @@ async def findUsername(username, interfaceType, flag_csv=False):
         }
         for x in results:
             userJson["sites"].append(x)
-        pathSave = os.path.join(path, "output", "blackbird-" + username + ".json")
-        userFile = open(pathSave, "w")
-        json.dump(userJson, userFile, indent=4, sort_keys=True)
 
-        print(
-            f"{Fore.LIGHTYELLOW_EX}[!] Search complete in {executionTime} seconds\033[0m"
-        )
-        print(f"{Fore.LIGHTYELLOW_EX}[!] Results saved to {username}.json\033[0m")
+        if output_file:
+            pathSave = os.path.join(path, "output", output_file)
+            with open(pathSave, "w") as outputFile:
+                json.dump(userJson, outputFile, indent=4, sort_keys=True)
+            print(
+                f"{Fore.LIGHTYELLOW_EX}[!] Results saved to {output_file}\033[0m"
+            )
+        else:
+            pathSave = os.path.join(path, "output", "blackbird-" + username + ".json")
+            with open(pathSave, "w") as userFile:
+                json.dump(userJson, userFile, indent=4, sort_keys=True)
+            print(
+                f"{Fore.LIGHTYELLOW_EX}[!] Results saved to {username}.json\033[0m"
+            )
 
         if flag_csv:
             exportCsv(userJson)
@@ -243,6 +250,13 @@ if __name__ == "__main__":
         help="The target username.",
     )
     parser.add_argument(
+        "-o",
+        action="store",
+        dest="output_file",
+        required=False,
+        help="Specify the output file.",
+    )
+    parser.add_argument(
         "--list-sites",
         action="store_true",
         dest="list",
@@ -289,13 +303,13 @@ if __name__ == "__main__":
         command = subprocess.run((sys.executable, "webserver.py"))
         command.check_returncode()
 
-    if arguments.username:
+    if arguments.username and arguments.output_file:
         try:
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         except:
             pass
         interfaceType = "CLI"
-        asyncio.run(findUsername(arguments.username, interfaceType, arguments.csv))
+        asyncio.run(findUsername(arguments.username, interfaceType, arguments.csv, arguments.output_file))
     elif arguments.list:
         list_sites()
     elif arguments.file:
